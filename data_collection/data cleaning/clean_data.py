@@ -25,10 +25,11 @@ khmer_to_english_province_mapping = {
     'រតនគីរី': 'Ratanakiri',
     'សៀមរាម': 'Siem Reap',
     'ស្ទឹងត្រែង': 'Stung Treng',
-    'ស្វាយរៀង':'Svay Rieng',
+    'ស្វាយរៀង': 'Svay Rieng',
     'តាកែវ': 'Takéo',
-    'ត្បូងឃ្មុំ': 'Tboung Khmum'  
+    'ត្បូងឃ្មុំ': 'Tboung Khmum'
 }
+
 def clean_csv_file(file_path):
     # Load the CSV file
     try:
@@ -51,13 +52,22 @@ def clean_csv_file(file_path):
     df['province'] = df['province'].str.strip().str.title()
     df['title'] = df['title'].str.strip()
 
-    # fill in missing province value 
+    # Fill in missing province values
     def fill_province_from_address(row):
         if pd.isna(row['province']):
             address = row['address']
             if isinstance(address, str):
                 try:
                     address_dict = ast.literal_eval(address)
+                    khmer_province = address_dict.get('county', 'Unknown') 
+                    # Map Khmer name to English name
+                    return khmer_to_english_province_mapping.get(khmer_province, khmer_province)
+                except (ValueError, SyntaxError):
+                    pass 
+        return row['province']
+    
+    df['province'] = df.apply(fill_province_from_address, axis=1)
+
     # Handle missing values
     df.fillna({'language': 'Unknown', 'openingHours': 'Not Available', 'ontologyId': 'Unknown', 
                'references': 'Not Available', 'contacts': 'Not Available', 'province': 'N/A'}, inplace=True)
@@ -78,7 +88,11 @@ def clean_csv_file(file_path):
 
     # Convert 'distance' to numeric, handling errors
     df['distance'] = pd.to_numeric(df['distance'], errors='coerce')
-    
+
+    # Remove rows where ontologyId is 'casino'
+    df = df[df['ontologyId'].str.lower() != 'casino']
+    print(f"Data size after removing rows with ontologyId as 'casino': {df.shape}")
+
     # Save cleaned data to a new CSV file
     clean_file_path = file_path.replace(".csv", "_cleaned.csv")
     df.to_csv(clean_file_path, index=False)
