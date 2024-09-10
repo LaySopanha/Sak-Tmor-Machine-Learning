@@ -69,7 +69,7 @@ def clean_csv_file(file_path):
     df['province'] = df.apply(fill_province_from_address, axis=1)
 
     # Handle missing values
-    df.fillna({'language': 'Unknown', 'openingHours': 'Not Available', 'ontologyId': 'Unknown', 
+    df.fillna({'language': 'Unknown', 'openingHours': 'Not Available', 'ontologyId': 'here:cm:ontology:', 
                'references': 'Not Available', 'contacts': 'Not Available', 'province': 'N/A'}, inplace=True)
     df.dropna(subset=['id', 'title', 'address'], inplace=True)
     print(f"Data size after handling missing values: {df.shape}")
