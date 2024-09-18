@@ -90,8 +90,22 @@ def clean_csv_file(file_path):
     df['distance'] = pd.to_numeric(df['distance'], errors='coerce')
 
     # Remove rows where ontologyId is 'casino'
-    df = df[df['ontologyId'].str.lower() != 'casino']
+    df = df[df['ontologyId'].str.lower() != 'here:cm:ontology:casino']
     print(f"Data size after removing rows with ontologyId as 'casino': {df.shape}")
+    
+    # Remove rows where ontologyId is 'bar'
+    df = df[df['ontologyId'].str.lower() != 'here:cm:ontology:bar']
+    print(f"Data size after removing rows with ontologyId as 'bar': {df.shape}")
+    
+    # Remove rows where ontologyId is 'Night Club'
+    df = df[df['ontologyId'].str.lower() != 'here:cm:ontology:Night Club']
+    print(f"Data size after removing rows with ontologyId as 'Night Club': {df.shape}")
+    
+    # Remove rows where ontologyId is 'bar_pub'
+    df = df[df['ontologyId'].str.lower() != 'here:cm:ontology:bar_pub']
+    print(f"Data size after removing rows with ontologyId as 'bar_pub': {df.shape}")
+    
+    
 
     # Save cleaned data to a new CSV file
     clean_file_path = file_path.replace(".csv", "_cleaned.csv")
@@ -99,4 +113,4 @@ def clean_csv_file(file_path):
     print(f"Data cleaned and saved to '{clean_file_path}'.")
 
 # Usage
-clean_csv_file('../data/place_data4.csv')
+clean_csv_file('../data/place_data4_cleanednew.csv')

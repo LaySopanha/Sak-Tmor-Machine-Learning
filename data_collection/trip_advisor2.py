@@ -1,8 +1,6 @@
 import requests
-import os
-locations = "Siem Reap"
-API_KEY = os.getenv("API_TRIP_ADVISOR")
-url = "https://api.content.tripadvisor.com/api/v1/location/search?language=en&key=75A0A5697C6C417DB378D7CE26E711F3&searchQuery={locations}"
+
+url = "https://api.content.tripadvisor.com/api/v1/location/24834646/details?key=23A610065834448AA43756925DF72D3D&language=en&currency=USD"
 
 headers = {"accept": "application/json"}
 
