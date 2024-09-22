@@ -6,7 +6,7 @@ import time
 
 
 # Define the two API keys
-api_keys = ["C378526B04234D06B59795E9A3BEC7C5", "75A0A5697C6C417DB378D7CE26E711F3"]
+api_keys = ["75A0A5697C6C417DB378D7CE26E711F3", "C378526B04234D06B59795E9A3BEC7C5"]
 current_key_index = 0  # Start with the first API key
 request_count = 0  # Counter for the number of requests made
 
@@ -74,7 +74,7 @@ def get_tripadvisor_details(location_id):
             return None
 
 # Read places data from CSV
-places_df = pd.read_csv('./data/place_data4_cleanednew2.csv')
+places_df = pd.read_csv('./data/placesv2.csv')
 
 # Convert the 'position' column from string to dictionary
 places_df['position'] = places_df['position'].apply(eval)

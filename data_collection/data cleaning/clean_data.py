@@ -52,7 +52,7 @@ def clean_csv_file(file_path):
     df['province'] = df['province'].str.strip().str.title()
     df['title'] = df['title'].str.strip()
 
-    # Fill in missing province values
+    # Fill missing province values based on address
     def fill_province_from_address(row):
         if pd.isna(row['province']):
             address = row['address']
@@ -60,7 +60,6 @@ def clean_csv_file(file_path):
                 try:
                     address_dict = ast.literal_eval(address)
                     khmer_province = address_dict.get('county', 'Unknown') 
-                    # Map Khmer name to English name
                     return khmer_to_english_province_mapping.get(khmer_province, khmer_province)
                 except (ValueError, SyntaxError):
                     pass 
@@ -68,44 +67,68 @@ def clean_csv_file(file_path):
     
     df['province'] = df.apply(fill_province_from_address, axis=1)
 
-    # Handle missing values
-    df.fillna({'language': 'Unknown', 'openingHours': 'Not Available', 'ontologyId': 'here:cm:ontology:', 
-               'references': 'Not Available', 'contacts': 'Not Available', 'province': 'N/A'}, inplace=True)
-    df.dropna(subset=['id', 'title', 'address'], inplace=True)
+    # Define default values for empty or missing data
+    default_value = {
+        'language':'Unknown',
+        'openingHours':'Not Available',
+        'ontologyId':'here:cm:ontology:',
+        'references':'Not Available',
+        'contacts':'Not Available',
+        'province':'N/A',
+        'location_id':'Not Available',
+        'name':'Not Available',
+        'description':'Not Available',
+        'web_url': 'Not Available',
+        'address_obj':'Not Available',
+        'ancestors':'Not Available',
+        'timezone': 'Not Available',
+        'write_review': 'Not Available',
+        'ranking_data': 'Not Available',
+        'rating': 'Not Available',
+        'rating_image_url': 'Not Available',
+        'num_reviews': 'Not Available',
+        'review_rating_count': 'Not Available',
+        'subratings': 'Not Available',
+        'photo_count': 'Not Available',
+        'see_all_photos': 'Not Available',
+        'amenities': 'Not Available',
+        'category': 'Not Available',
+        'subcategory': 'Not Available',
+        'styles': 'Not Available',
+        'neighborhood_info': 'Not Available',
+        'trip_types': 'Not Available'
+    }
+
+    
+
+    # Replace NaN, empty lists, or empty dictionaries with default values
+    def clean_value(value, default):
+        # Check for NaN, empty lists, and empty dictionaries
+        if pd.isna(value) or value == [] or value == {}:
+            return default
+        return value
+
+    # Apply the cleaning function across all columns that have default values
+    for column, default in default_value.items():
+        if column in df.columns:
+            df[column] = df[column].apply(lambda x: clean_value(x, default))
+
     print(f"Data size after handling missing values: {df.shape}")
     
     # Convert the 'position' column from string to dictionary
     df['position'] = df['position'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
 
     # Validate data: Check for valid latitude and longitude
-    def is_valid_position(pos):
-        if isinstance(pos, dict):
-            return 'lat' in pos and 'lng' in pos
-        return False
-    
-    df = df[df['position'].apply(is_valid_position)]
+    df = df[df['position'].apply(lambda pos: isinstance(pos, dict) and 'lat' in pos and 'lng' in pos)]
     print(f"Data size after filtering by position: {df.shape}")
 
     # Convert 'distance' to numeric, handling errors
     df['distance'] = pd.to_numeric(df['distance'], errors='coerce')
 
-    # Remove rows where ontologyId is 'casino'
-    df = df[df['ontologyId'].str.lower() != 'here:cm:ontology:casino']
-    print(f"Data size after removing rows with ontologyId as 'casino': {df.shape}")
-    
-    # Remove rows where ontologyId is 'bar'
-    df = df[df['ontologyId'].str.lower() != 'here:cm:ontology:bar']
-    print(f"Data size after removing rows with ontologyId as 'bar': {df.shape}")
-    
-    # Remove rows where ontologyId is 'Night Club'
-    df = df[df['ontologyId'].str.lower() != 'here:cm:ontology:Night Club']
-    print(f"Data size after removing rows with ontologyId as 'Night Club': {df.shape}")
-    
-    # Remove rows where ontologyId is 'bar_pub'
-    df = df[df['ontologyId'].str.lower() != 'here:cm:ontology:bar_pub']
-    print(f"Data size after removing rows with ontologyId as 'bar_pub': {df.shape}")
-    
-    
+    # Remove rows where ontologyId matches certain categories
+    unwanted_categories = ['here:cm:ontology:casino', 'here:cm:ontology:bar', 'here:cm:ontology:night club', 'here:cm:ontology:bar_pub']
+    df = df[~df['ontologyId'].str.lower().isin(unwanted_categories)]
+    print(f"Data size after removing unwanted ontologyId categories: {df.shape}")
 
     # Save cleaned data to a new CSV file
     clean_file_path = file_path.replace(".csv", "_cleaned.csv")
@@ -113,4 +136,4 @@ def clean_csv_file(file_path):
     print(f"Data cleaned and saved to '{clean_file_path}'.")
 
 # Usage
-clean_csv_file('../data/place_data4_cleanednew.csv')
+clean_csv_file('../data/place_details_new.csv')
