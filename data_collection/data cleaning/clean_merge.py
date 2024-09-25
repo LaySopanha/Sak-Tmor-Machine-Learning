@@ -20,11 +20,7 @@ df['province'] = df['province'].replace({
     'KratiÃ©': 'Kratie'
 })
 
-#encode for machine learning 
-label_encoder = LabelEncoder()
-df['categories_encoded'] = label_encoder.fit_transform(df['ontologyId'])
-df['province_encoded'] = label_encoder.fit_transform(df['province'])
-print(df.head())
+
 # Save the cleaned data back to a CSV file
 
 cleaned_file_path = '../data/merged_data_cleaned.csv'  # Change this to your desired output path
