@@ -126,7 +126,7 @@ def clean_csv_file(file_path):
     df['distance'] = pd.to_numeric(df['distance'], errors='coerce')
 
     # Remove rows where ontologyId matches certain categories
-    unwanted_categories = ['here:cm:ontology:casino', 'here:cm:ontology:bar', 'here:cm:ontology:night club', 'here:cm:ontology:bar_pub']
+    unwanted_categories = ['here:cm:ontology:casino', 'here:cm:ontology:bar', 'here:cm:ontology:night club', 'here:cm:ontology:bar_pub','here:cm:ontology:theatre_music_culture']
     df = df[~df['ontologyId'].str.lower().isin(unwanted_categories)]
     print(f"Data size after removing unwanted ontologyId categories: {df.shape}")
 
@@ -136,4 +136,4 @@ def clean_csv_file(file_path):
     print(f"Data cleaned and saved to '{clean_file_path}'.")
 
 # Usage
-clean_csv_file('../data/place_details_new.csv')
+clean_csv_file('../data/placesv2.csv')
