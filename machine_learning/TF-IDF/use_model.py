@@ -15,6 +15,6 @@ def get_recommendations(user_input):
     return data.iloc[top_indices]
 
 # example usage 
-user_input = "tourest attraction in Kep"
+user_input = "Im looking for adventure at sea"
 recoommendations = get_recommendations(user_input)
 print(recoommendations[['title','ontologyId','province']])
