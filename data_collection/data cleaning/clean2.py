@@ -1,63 +1,66 @@
 import pandas as pd
 
-def clean_csv_file(file_path):
-    # Load the CSV file
+# Path to the merged CSV file
+merged_file_path = '../data/merged_data_v1.csv'
+cleaned_file_path = '../data/cleaned_merged_data.csv'
+
+def clean_merged_data(merged_file_path, cleaned_file_path):
     try:
-        df = pd.read_csv(file_path)
-    except FileNotFoundError:
-        print(f"Error: The file '{file_path}' does not exist.")
+        # Load the merged DataFrame
+        merged_df = pd.read_csv(merged_file_path)
+
+        # Display the initial shape of the DataFrame
+        print(f"Initial shape: {merged_df.shape}")
+        
+        # Drop duplicates based on the 'title' column
+        merged_df.drop_duplicates(subset='title', inplace=True)
+        #Remove Duplicates
+        merged_df.drop_duplicates(inplace=True)
+
+        # Fill missing values in specific columns with "Not available"
+        columns_to_fill = ['id', 'language', 'address', 'position', 'access', 'distance',
+                        'categories', 'foodTypes', 'references', 'contacts', 'openingHours', 'province',
+                        'latitude', 'longitude', 'location_id', 'name', 'description', 'web_url',
+                        'address_obj', 'ancestors', 'timezone', 'email', 'phone', 'website', 'write_review', 'ranking_data', 'rating', 
+                        'rating_image_url', 'num_reviews', 'review_rating_count', 'subratings', 
+                        'photo_count', 'see_all_photos', 'price_level', 'hours', 'amenities', 
+                            'cuisine','parent_brand','brand', 'category', 'subcategory', 'groups', 
+                        'styles', 'neighborhood_info', 'trip_types', 'awards', 'error','image_src']
+        merged_df[columns_to_fill] = merged_df[columns_to_fill].fillna('Not available')
+        
+        merged_df['GovTourismWebsite'] = merged_df['GovTourismWebsite'].fillna("False")
+        merged_df['ontologyId'] = merged_df['ontologyId'].fillna('tourist_attraction')
+
+        
+
+        # Check Data Types
+        print("Data types before conversion:")
+        print(merged_df.dtypes)
+
+        # Convert latitude and longitude to numeric types (if applicable)
+        merged_df['latitude'] = pd.to_numeric(merged_df['latitude'], errors='coerce')
+        merged_df['longitude'] = pd.to_numeric(merged_df['longitude'], errors='coerce')
+        
+        # Save the cleaned DataFrame to a new CSV file
+        merged_df.to_csv(cleaned_file_path, index=False)
+        print(f"Cleaned DataFrame saved to {cleaned_file_path}")
+
+        # Display the final shape of the cleaned DataFrame
+        print(f"Final shape: {merged_df.shape}")
+        return merged_df
+
+    except FileNotFoundError as e:
+        print(f"Error: {e.filename} not found.")
         return
     except pd.errors.EmptyDataError:
-        print(f"Error: The file '{file_path}' is empty.")
+        print("The merged file is empty.")
+        return
+    except pd.errors.ParserError:
+        print("Error parsing the CSV file. Check the file format.")
+        return
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
         return
 
-    # Function to filter out useless places
-    def filter_useless_places(df):
-        
-        # Remove rows with missing or invalid IDs
-        df = df.dropna(subset=['id'])
-        
-        # Remove duplicates based on important columns
-        df = df.drop_duplicates(subset=['id', 'title', 'address'])
-        
-        # Filter by ontologyId to remove irrelevant categories
-        unwanted_categories = ['here:cm:ontology:night_club', 'here:cm:ontology:casino']
-        df = df[~df['ontologyId'].str.lower().isin(unwanted_categories)]
-        
-        # Remove entries where both 'contacts' and 'openingHours' are 'Not Available'
-        df = df[~((df['contacts'] == 'Not Available') & (df['openingHours'] == 'Not Available') & (df['ontologyId'] != 'here:cm:ontology:temple'))]
-
-        
-        # Handle missing or invalid position (latitude and longitude)
-        df = df.dropna(subset=['position'])
-        
-        # Remove rows with unreasonable or missing distance
-        df['distance'] = pd.to_numeric(df['distance'], errors='coerce')
-        df = df.dropna(subset=['distance'])
-        # Define the types of places you want to filter out
-        accommodation_categories = ['here:cm:ontology:hotel', 'here:cm:ontology:guest_house', 'here:cm:ontology:hostel', 'here:cm:ontology:accommodation']
-        restaurant_categories = ['here:cm:ontology:restaurant', 'here:cm:ontology:coffee', 'here:cm:ontology:diner', 'here:cm:ontology:eatery']
-
-        # Filter for Siem Reap entries (case-insensitive)
-        siem_reap_filter = df['province'].str.lower() == 'siem reap'
-
-        # Apply filters to cut places with no contacts, opening hours, etc.
-        df_filtered = df[~(
-            siem_reap_filter &
-            (
-                ((df['ontologyId'].str.lower().isin(accommodation_categories)) & (df['contacts'] == 'Not Available')) |
-                ((df['ontologyId'].str.lower().isin(restaurant_categories)) & (df['openingHours'] == 'Not Available'))
-            )
-        )]
-        return df_filtered
-
-    # Apply the filtering function and update the DataFrame
-    df = filter_useless_places(df)
-
-    # Save cleaned data to a new CSV file
-    clean_file_path = file_path.replace(".csv", "_cleaned.csv")
-    df.to_csv(clean_file_path, index=False)
-    print(f"Data cleaned and saved to '{clean_file_path}'.")
-
-# Usage
-clean_csv_file('../data/places_data6.csv')
+# Run the function to clean the merged data
+cleaned_df = clean_merged_data(merged_file_path, cleaned_file_path)

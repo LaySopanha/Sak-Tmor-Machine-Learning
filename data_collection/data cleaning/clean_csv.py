@@ -20,41 +20,41 @@ columns_to_fill = ['id', 'language', 'ontologyId', 'address', 'position', 'acces
 df[columns_to_fill] = df[columns_to_fill].fillna('Not available')
 
 # Clean the ontologyId and province
-df['ontologyId'] = df['ontologyId'].str.split(':').str[-1]
-df['province'] = df['province'].replace({
-    'TakÃ©o': 'Takeo',
-    'KratiÃ©': 'Kratie'
-})
+# df['ontologyId'] = df['ontologyId'].str.split(':').str[-1]
+# df['province'] = df['province'].replace({
+#     'TakÃ©o': 'Takeo',
+#     'KratiÃ©': 'Kratie'
+# })
 
 # Dictionary of patterns for different columns
 patterns = {
-    # 'email': (r'^[\w\.-]+@[\w\.-]+\.\w+$', False),
-    # 'phone': (r'^\+?[0-9\s\-()]{7,15}$',False),
-    # 'website': (r'^(http|https)://.*$',False),
-    # 'website': (r'^https://www.tripadvisor.com/.*$',True), for web i need to do it twice so that it wont mix with the other pattern with https://
-    # 'write_review': (r'^https://www.tripadvisor.com/UserReview.*$',False),
-    # 'ranking_data': (r"\{'geo_location_id':.*\}", False),
-    # 'rating': (r'^[0-5](\.[0-9]+)?$',False),
-    # 'rating_image_url': (r'^https://www.tripadvisor.com/img.*$',False),
-    # 'num_reviews': (r'^\d+$',False),
-    # 'review_rating_count': (r"\{\s*'(\d+)'\s*:\s*'(\d+)'\s*(,\s*'(\d+)'\s*:\s*'(\d+)'\s*)*\}",False),
-    # 'subratings': (r'^\{\s*\}$|^\{.*\}$', False),
-    # 'photo_count': (r'^\d+$', False),
-    # 'see_all_photos': (r'^https://www\.tripadvisor\.com/.+#photos$', False),
-    # 'price_level': (r'^.*\$', False),
-    # 'hours': (r"\{'periods':",False),
-    # 'amenities': (r'^\s*\[([^\]]*|)\]\s*$', False),
-    # 'cuisine': (r"\[\{'name':",False),
-    # 'parent_brand': (r'^[^{}[\]]+$', False),
-    # 'brand': (r'^[^{}[\]]+$', False),
-    # 'category': (r"\{'name':\s*'.*?'\s*,\s*'localized_name':\s*'.*?'\}", False),
-    # 'subcategory': (r"\[\{'name':\s*'.*?'\s*,\s*'localized_name':\s*'.*?'\}\]", False),
-    # 'groups': (r"\[\{('name':\s*'.*?'\s*,\s*'localized_name':\s*'.*?'(\s*,\s*'categories':\s*\[.*?\])?)\}\]", False),
-    # 'styles': (r'^\[\s*(".*?"|\'.*?\')(\s*,\s*(".*?"|\'.*?\'))*\s*\]$', False),
-    # 'neighborhood_info': (r'^\[\s*\]$',False),
-    # 'trip_types': (r"^\[\s*(\{\'name\':\s*\'[^\']+\',\s*\'localized_name\':\s*\'[^\']+\',\s*\'value\':\s*\'\d+\'\}\s*,?\s*)+\]$",True), 
+    'email': (r'^[\w\.-]+@[\w\.-]+\.\w+$', False),
+    'phone': (r'^\+?[0-9\s\-()]{7,15}$',False),
+    'website': (r'^(http|https)://.*$',False),
+    'website': (r'^https://www.tripadvisor.com/.*$',True), #for web i need to do it twice so that it wont mix with the other pattern with https://
+    'write_review': (r'^https://www.tripadvisor.com/UserReview.*$',False),
+    'ranking_data': (r"\{'geo_location_id':.*\}", False),
+    'rating': (r'^[0-5](\.[0-9]+)?$',False),
+    'rating_image_url': (r'^https://www.tripadvisor.com/img.*$',False),
+    'num_reviews': (r'^\d+$',False),
+    'review_rating_count': (r"\{\s*'(\d+)'\s*:\s*'(\d+)'\s*(,\s*'(\d+)'\s*:\s*'(\d+)'\s*)*\}",False),
+    'subratings': (r'^\{\s*\}$|^\{.*\}$', False),
+    'photo_count': (r'^\d+$', False),
+    'see_all_photos': (r'^https://www\.tripadvisor\.com/.+#photos$', False),
+    'price_level': (r'^.*\$', False),
+    'hours': (r"\{'periods':",False),
+    'amenities': (r'^\s*\[([^\]]*|)\]\s*$', False),
+    'cuisine': (r"\[\{'name':",False),
+    'parent_brand': (r'^[^{}[\]]+$', False),
+    'brand': (r'^[^{}[\]]+$', False),
+    'category': (r"\{'name':\s*'.*?'\s*,\s*'localized_name':\s*'.*?'\}", False),
+    'subcategory': (r"\[\{'name':\s*'.*?'\s*,\s*'localized_name':\s*'.*?'\}\]", False),
+    'groups': (r"\[\{('name':\s*'.*?'\s*,\s*'localized_name':\s*'.*?'(\s*,\s*'categories':\s*\[.*?\])?)\}\]", False),
+    'styles': (r'^\[\s*(".*?"|\'.*?\')(\s*,\s*(".*?"|\'.*?\'))*\s*\]$', False),
+    'neighborhood_info': (r'^\[\s*\]$',False),
+    'trip_types': (r"^\[\s*(\{\'name\':\s*\'[^\']+\',\s*\'localized_name\':\s*\'[^\']+\',\s*\'value\':\s*\'\d+\'\}\s*,?\s*)+\]$",True), 
     'trip_types': (r"\[\{'award_type':",True), 
-    'awards': (r"\[\{'award_type':.*",True), 
+    'awards': (r"\[\{'award_type':.*",True)
     
 }
 
