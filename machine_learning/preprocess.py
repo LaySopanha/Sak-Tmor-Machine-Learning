@@ -3,7 +3,7 @@ from sklearn.preprocessing import LabelEncoder
 
 
 # read from csv
-file_path = '../data_collection/data/merged_data_cleaned.csv'
+file_path = '../data_collection/data/cleaned_merged_data.csv'
 
 def open_csv_file(file_path):
     try:

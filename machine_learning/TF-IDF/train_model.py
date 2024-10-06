@@ -1,31 +1,32 @@
-import pandas as pd 
+# train_model1.py - Improved version
+import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 import pickle
 
-# load data 
-file_path = "../../data_collection/data/merged_data_cleaned.csv"
-recommendation_pkl_file = "../model/recommendation_model.pkl"
-def open_csv(file_path):
-    try:
-        data = pd.read_csv(file_path)
-    except FileNotFoundError:
-        print(f"File {file_path} is not found.")
-        return
-    except pd.errors.EmptyDataError:
-        print(f"File {file_path} is emtpy")
-        return
-    return data 
-data = open_csv(file_path)
+# Load data from CSV
+file_path = "../../data_collection/data/cleaned_merged_data.csv"
+categories_tfidf_model_file_path = "../model/categories_tfidf_model.pkl"
 
-# combine relevent columns to make a searchable field
-data['combined'] = data['title'] + ' ' + data['description'] + ' '+ data['ontologyId']
+try:
+    data = pd.read_csv(file_path)
+except FileNotFoundError:
+    print(f"Error: The file {file_path} was not found.")
+    exit(1)
 
-#train the TF-IDF vectorizer 
-vectorizer = TfidfVectorizer(stop_words='english')
-tfidf_matrix = vectorizer.fit_transform(data['combined'])
+# Ensure data is not empty
+if data.empty:
+    print("Error: The data file is empty.")
+    exit(1)
 
-#save the train model and matrix to a pkl file 
-with open(recommendation_pkl_file, 'wb') as f:
-    pickle.dump((vectorizer, tfidf_matrix, data), f)
-print(f"Model trained and saved to {recommendation_pkl_file}.")
+# Combine 'ontologyId' and 'province' for TF-IDF vectorization
+data['combined'] = data['ontologyId'].astype(str) + ' ' + data['province'].astype(str)
+
+# Create TF-IDF vectorizer and fit-transform the data
+categories_vectorizer = TfidfVectorizer()
+categories_tfidf_matrix = categories_vectorizer.fit_transform(data['combined'])
+
+# Save vectorizer and TF-IDF matrix to a pickle file
+with open(categories_tfidf_model_file_path, 'wb') as f:
+    pickle.dump({'vectorizer': categories_vectorizer, 'tfidf_matrix': categories_tfidf_matrix}, f)
+
+print("TF-IDF model for categories and provinces saved successfully.")
