@@ -1,4 +1,4 @@
-# trip_planner.py - Improved version
+import numpy as np
 import pandas as pd
 import pickle
 from sklearn.metrics.pairwise import cosine_similarity
@@ -20,14 +20,24 @@ with open(description_tfidf_model_file_path, 'rb') as f:
 description_vectorizer = description_model['vectorizer']
 description_tfidf_matrix = description_model['description_matrix']
 
-with open(label_encoders_file_path , 'rb') as f:
+with open(label_encoders_file_path, 'rb') as f:
     encoders = pickle.load(f)
 label_encoder_ontology = encoders['ontology']
 label_encoder_province = encoders['province']
 
-# Function to calculate weighted score based on ratings and number of reviews
-def calculate_weighted_score(df):
-    return (df['rating'] * df['num_reviews']) / (df['num_reviews'] + 1)
+def calculate_weighted_score(row):
+    # Ensure rating and num_reviews are numeric
+    rating = pd.to_numeric(row['rating'], errors='coerce')
+    num_reviews = pd.to_numeric(row['num_reviews'], errors='coerce')
+    
+    # Handle NaN values
+    if pd.isna(rating) or pd.isna(num_reviews):
+        return 0
+
+    # Weighted score calculation
+    weight = 0.4  # Weight for rating
+    weighted_score = (rating * weight) + (np.log(num_reviews + 1) * (1 - weight))
+    return weighted_score
 
 # Function to get recommendations based on province and category
 def get_recommendations(user_province, user_category):
@@ -51,38 +61,42 @@ def find_place_to_stay_eat(selected_province, ontology_type):
 def generate_trip_plan(user_province, days, user_keywords):
     trip_plan = []
 
-    # Get top places to stay (hotels) and eat (restaurants)
-    places_to_stay = find_place_to_stay_eat(user_province, 'hotel')
-    places_to_eat = find_place_to_stay_eat(user_province, 'restaurant')
-
-    # Get top activities based on user keywords (using description TF-IDF)
-    user_keyword_vector = description_vectorizer.transform([user_keywords])
-    similarity_scores = cosine_similarity(user_keyword_vector, description_tfidf_matrix)
+    # Get recommendations based on the user input, sorted by similarity and rating
+    recommendations = get_recommendations(user_province, user_keywords)
     
-    df['activity_similarity'] = similarity_scores[0]
-    top_activities = df.sort_values(by='activity_similarity', ascending=False).head(5)
+    # Filter places to stay (hotels) and eat (restaurants) from recommendations
+    places_to_stay = find_place_to_stay_eat(user_province, ontology_type="hotel")
+    places_to_eat = find_place_to_stay_eat(user_province, ontology_type="restaurant")
+
+    # Ensure we have at least enough unique options
+    if len(places_to_stay) < days or len(places_to_eat) < days:
+        print("Not enough unique options for staying or eating for the specified days.")
+        return []
 
     # Distribute places to stay, eat, and activities over the days
     for day in range(1, days + 1):
         plan_for_the_day = {
             'day': day,
-            'place_to_stay': places_to_stay.iloc[(day - 1) % len(places_to_stay)],
-            'place_to_eat': places_to_eat.iloc[(day - 1) % len(places_to_eat)],
-            'activity': top_activities.iloc[(day - 1) % len(top_activities)]
+            'place_to_stay': places_to_stay.iloc[day - 1],  
+            'place_to_eat': places_to_eat.iloc[day - 1],   
+            'activity': recommendations.iloc[day - 1]        
         }
         trip_plan.append(plan_for_the_day)
 
     return trip_plan
 
+
 # Example usage
-user_province = 'Phnom Penh'
-user_keywords = 'museum history'
+user_province = 'Siem Reap'
+user_keywords = ' history landmark_attraction museum'
 days = 3
 
 trip_plan = generate_trip_plan(user_province, days, user_keywords)
 for day_plan in trip_plan:
     print(f"Day {day_plan['day']}:")
-    print(f"  Stay at: {day_plan['place_to_stay']['title']}")
-    print(f"  Eat at: {day_plan['place_to_eat']['title']}")
-    print(f"  Activity: {day_plan['activity']['title']}")
+    print(f"  Stay at: {day_plan['place_to_stay']['title']} (Categories: {day_plan['place_to_stay']['ontologyId']}, Province: {day_plan['place_to_stay']['province']}, Rating: {day_plan['place_to_stay']['rating']}, Reviews: {day_plan['place_to_stay']['num_reviews']})")
+    print(f"  Eat at: {day_plan['place_to_eat']['title']} (Categories: {day_plan['place_to_eat']['ontologyId']}, Province: {day_plan['place_to_eat']['province']}, Rating: {day_plan['place_to_eat']['rating']}, Reviews: {day_plan['place_to_eat']['num_reviews']})")
+    print(f"  activity: {day_plan['activity']['title']} (Categories: {day_plan['activity']['ontologyId']}, Province: {day_plan['place_to_eat']['province']}, Rating: {day_plan['place_to_eat']['rating']}, Reviews: {day_plan['place_to_eat']['num_reviews']})")
+    
+    
     print()
