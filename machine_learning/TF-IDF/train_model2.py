@@ -1,16 +1,16 @@
-# train_model2.py - Improved version
+
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from sklearn.feature_extraction.text import TfidfVectorizer
 import pickle
 
-# Load cleaned CSV data
-file_path = "../../data_collection/data/cleaned_merged_data.csv"
+# file path
+file_path = '../../data_collection/data/cleaned_merged_data.csv'
 description_tfidf_model_file_path = "../model/description_tfidf_model.pkl"
 label_encoders_file_path = "../model/label_encoders.pkl"
 df = pd.read_csv(file_path)
 
-# Encode 'ontologyId' and 'province' columns using LabelEncoder
+# ontologyId and province encoder calling
 label_encoder_ontology = LabelEncoder()
 label_encoder_province = LabelEncoder()
 

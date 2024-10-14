@@ -1,10 +1,10 @@
-# train_model1.py - Improved version
+
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 import pickle
 
 # Load data from CSV
-file_path = "../../data_collection/data/cleaned_merged_data.csv"
+file_path = '../../data_collection/data/cleaned_merged_data.csv'
 categories_tfidf_model_file_path = "../model/categories_tfidf_model.pkl"
 
 try:
@@ -18,7 +18,7 @@ if data.empty:
     print("Error: The data file is empty.")
     exit(1)
 
-# Combine 'ontologyId' and 'province' for TF-IDF vectorization
+# combine ontologyId and province for the TF-IDF vectorization
 data['combined'] = data['ontologyId'].astype(str) + ' ' + data['province'].astype(str)
 
 # Create TF-IDF vectorizer and fit-transform the data
