@@ -33,11 +33,15 @@ df['ontology_encoded'] = label_encoder_ontology.transform(df['ontologyId'])
 
 # Function to calculate weighted score
 def calculate_weighted_score(row):
-    # Ensure rating and num_reviews are numeric
+    # Check if rating or num_reviews is "Not Available"
+    if row['rating'] == 'Not Available' or row['num_reviews'] == 'Not Available':
+        return 0
+    
+    # Convert rating and num_reviews to numeric, setting errors='coerce' will return NaN for invalid parsing
     rating = pd.to_numeric(row['rating'], errors='coerce')
     num_reviews = pd.to_numeric(row['num_reviews'], errors='coerce')
-
-    # Handle NaN values
+    
+    # Handle NaN values after conversion (in case of non-parsable values)
     if pd.isna(rating) or pd.isna(num_reviews):
         return 0
 
@@ -47,16 +51,18 @@ def calculate_weighted_score(row):
     return weighted_score
 
 def get_recommendations(province_encoded, user_category_encoded):
-    # Create user vector directly from encoded category
-    user_vector = categories_vectorizer.transform([str(user_category_encoded)])  # Convert to string for vectorizer
-
+    user_vector = categories_vectorizer.transform([str(user_category_encoded)])
     similarity_scores = cosine_similarity(user_vector, categories_tfidf_matrix)
-    df['similarity_score'] = similarity_scores[0]
 
-    # Filter using encoded values
+    # Filter recommendations and create a copy
     recommendation = df[(df['ontology_encoded'] == user_category_encoded) &
-                         (df['province_encoded'] == province_encoded)].sort_values(
-                             by='similarity_score', ascending=False).head(100)
+                         (df['province_encoded'] == province_encoded)].copy()
+    
+    # Assign similarity_score to recommendation
+    recommendation['similarity_score'] = similarity_scores[0][:len(recommendation)]
+    
+    recommendation = recommendation.sort_values(by='similarity_score', ascending=False).head(100)
+    
     return recommendation
 # Function to generate the trip plan
 def generate_trip_plan(user_province, days, user_keywords, accommodation, dining_option, num_recommendations_per_day):
@@ -92,20 +98,7 @@ def generate_trip_plan(user_province, days, user_keywords, accommodation, dining
     accommodation = accommodation[accommodation['ontology_encoded'].isin(accommodation_encoded)]
     dining_option = dining_option[dining_option['province_encoded'] == province_encoded]
     dining_option = dining_option[dining_option['ontology_encoded'].isin(dining_option_encoded)]
-    
-    # Roll back function for when the place is not enough for the days 
-    # if len(recommendations) < days * num_recommendations_per_day:
-    #     natural_area = ['park_recreation_area','wildlife_refuge','waterfall','beach','natural_geographical','body_of_water','River','Outdoor-Recreation','Animal Park']
-    #     out_door_area = []
-    #     natural_area_dict = {
-    #         'area':natural_area,
-    #         'similar':
-    #     }
-    #     rollback_recommendation = 'tourist_attraction,gallery,aquarium,museum,leisure_outdoor,landmark_attraction,theatre_music_culture,park_recreation_area,Art Museum,Water Park,wildlife_refuge,historical_monument,tourist-attraction,waterfall,beach,history_museum,natural_geographical,body_of_water,River,Outdoor-Recreation,Animal Park'
-    #     rollbacck_encoded = label_encoder_ontology.transform()
-    #     recs = get_recommendations(province_encoded,)
         
-
     # Calculate and sort by weighted score
     recommendations['weighted_score'] = recommendations.apply(calculate_weighted_score, axis=1)
     recommendations = recommendations.sort_values(by='weighted_score', ascending=False)
@@ -118,6 +111,24 @@ def generate_trip_plan(user_province, days, user_keywords, accommodation, dining
     recommendations = recommendations.drop_duplicates().sort_values(by='weighted_score', ascending=False)
     accommodation = accommodation.drop_duplicates().sort_values(by='weighted_score', ascending=False)
     dining_option = dining_option.drop_duplicates().sort_values(by='weighted_score', ascending=False)
+    
+    # Check if recommendations are enough, else fallback to broader categories
+    total_required = days * num_recommendations_per_day
+
+    if len(recommendations) < total_required:
+        print("Not enough activities! Using fallback categories...")
+        fallback_categories = (
+            'tourist_attraction,gallery,aquarium,museum,landmark_attraction,theatre_music_culture,Art Museum,historical_monument,tourist-attraction,history_museum,'
+            'park_recreation_area,leisure_outdoor,Water Park,wildlife_refuge,Outdoor-Recreation,Animal Park,'
+            'waterfall,beach,natural_geographical,body_of_water,River'
+        )
+        fallback_encoded = label_encoder_ontology.transform(fallback_categories.split(','))
+        
+        for fallback_category in fallback_encoded:
+            if len(recommendations) >= total_required:
+                break  # Stop if we have enough recommendations
+            recs = get_recommendations(province_encoded, fallback_category)
+            recommendations = pd.concat([recommendations, recs]).drop_duplicates().sort_values(by='weighted_score', ascending=False)
 
     # Distribute places to stay, eat, and activities over the days
     for day in range(1, days + 1):
@@ -137,7 +148,7 @@ user_keywords = 'museum,aquarium'
 accommodation = 'guest_house,hostel,holiday_park,bed_and_breakfast,accommodation,hotel,motel'
 dining_option ='casual_dining,restaurant,coffee,fine_dining,cafe,pastries,food_market_stall'
 days = 3
-num_recommendations_per_day = 10
+num_recommendations_per_day = 5
 
 trip_plan = generate_trip_plan(user_province, days, user_keywords, accommodation, dining_option, num_recommendations_per_day)
 for day_plan in trip_plan:
